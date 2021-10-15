@@ -1,6 +1,14 @@
 from pydantic import BaseModel
-from fastapi import File
+from datetime import datetime
+from fastapi import File, UploadFile
+from uuid import UUID
 
 
-class Extension(BaseModel):
-    file: File 
+
+
+class ExtensionInDB(BaseModel):
+    extension_uuid: UUID
+    extension_name: str
+    platform: str
+    creation_datetime: datetime
+

@@ -1,6 +1,7 @@
 # app deps
 uvicorn
 ujson
+pydantic
 email_validator
 python-multipart
 motor

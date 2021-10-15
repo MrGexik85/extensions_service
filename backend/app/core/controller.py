@@ -1,33 +1,36 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, UploadFile, File
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.utils.mongodb import get_database
 from app.models.user import UserWithExtensionsResponse
-from app.services.user_service import * # Сделать нужные импорты
 import app.services.user_service as user_service
 import app.services.extension_service as extension_service
-from app.models.users import UserInResponse
+
+
 
 
 router = APIRouter()
 
-@router.get('/extension/{extension_uuid}')
-async def get_extension(extension_uuid: str):
+@router.get('/extension/{extension_uuid}', tags=['extensions'])
+async def get_extension(extension_uuid: str, db: AsyncIOMotorClient = Depends(get_database)):
     '''Найти расширение по uuid и выдать zip архив'''
     # Какая нибудь валидация запроса 
     response = await extension_service.get_extension(extension_uuid)
     return response
 
-@router.get('/user/{user_uuid}/extensions') 
-async def get_user_extensions(user_uuid: str):
+@router.get('/user/{user_uuid}/extensions', response_model=UserWithExtensionsResponse) 
+async def get_user_extensions(user_uuid: str, db: AsyncIOMotorClient = Depends(get_database)):
     '''Выдать JSON все записи модели Extension для переданного пользователя'''
     # Какая нибудь валидация запроса 
     response = await user_service.user_extensions(user_uuid)
     return response
 
 @router.delete('/user/{user_uuid}/delete_extension/{extension_uuid}')
-async def del_user_extension(user_uuid: str, extension_uuid: str):
+async def del_user_extension(user_uuid: str, extension_uuid: str, db: AsyncIOMotorClient = Depends(get_database)):
     '''Удалить расширение для переданнного пользователя'''
+    # user_uuid = UUID(user_uuid)
+    # extension_uuid = UUID(extension_uuid)
     # Валидация
     response = await user_service.delete_extension(user_uuid, extension_uuid)
     return response
@@ -35,10 +38,15 @@ async def del_user_extension(user_uuid: str, extension_uuid: str):
 @router.post('/user/{user_uuid}/new_extension')
 async def new_user_extension(user_uuid: str, 
                             platform_name: str, 
-                            file: UploadFile = File(...)):
+                            file: UploadFile = File(...),
+                            db: AsyncIOMotorClient = Depends(get_database)):
     '''Получить файл в формате .zip, сохранить его и добавить информацию в бд'''
+    try:
+        user_uuid = UUID(user_uuid)
+    except ValueError as err:
+        return {'success': False, 'message': 'Badly uuid format'}
     #Валидация 
-    response = await user_service.add_extension(user_uuid, platform_name, file)
+    response = await user_service.add_extension(user_uuid, platform_name, file, db)
     return response
 
 # @router.get("/", response_model=UserInResponse, tags=["users"])

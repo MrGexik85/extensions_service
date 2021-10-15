@@ -4,7 +4,7 @@ from fastapi import Depends
 from app.utils.mongodb import get_database
 
 
-async def get_extension(extension_uuid: str, db: AsyncIOMotorClient = Depends(get_database)):
+async def get_extension(extension_uuid: str, db: AsyncIOMotorClient):
     ''''''
     return {
         "success": True,
