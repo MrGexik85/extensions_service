@@ -1,0 +1,55 @@
+version: "3.1"
+services:
+        db:
+                image: mongo
+                restart: always
+                networks:
+                        - web_network
+                environment:
+                        MONGO_INITDB_ROOT_USERNAME: $DB_USERNAME
+                        MONGO_INITDB_ROOT_PASSWORD: $DB_PASSWORD
+                        MONGO_INITDB_DATABASE: $MONGO_INITDB_DATABASE
+                ports:
+                        - 27017:27017
+                volumes:
+                        - db_vol:/data/db
+
+        db-interface:
+                image: mongo-express
+                restart: always
+                environment:
+                        ME_CONFIG_MONGODB_ADMINUSERNAME: $DB_USERNAME
+                        ME_CONFIG_MONGODB_ADMINPASSWORD: $DB_PASSWORD
+                        ME_CONFIG_MONGODB_PORT: 27017
+                        ME_CONFIG_MONGODB_SERVER: db
+                ports:
+                        - 8081:8081
+                networks:
+                        - web_network # access the interface
+                depends_on:
+                        - db
+
+        app:
+                build: ./backend
+                restart: always
+                volumes:
+                        - ./backend:/app
+                environment:
+                        PORT: 8080
+                        DEBUG: $DEBUG
+                        SECRET_KEY: $SECRET_KEY
+                        DATABASE_URL: $DATABASE_URL
+                ports:
+                        - 8080:8080
+                depends_on:
+                        - db
+                networks:
+                        - web_network # for web API
+
+networks:
+        web_network:
+            driver: bridge
+
+volumes:
+        web-root:
+        db_vol:
