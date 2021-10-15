@@ -13,6 +13,7 @@ from app.models.extension import ExtensionInDB
 
 WORKDB = 'core'
 ZIP_MIME = ['application/zip', 'application/octet-stream', 'application/x-zip-compressed', 'multipart/x-zip']
+PLATFORMS = ['Chrome', 'Mozilla']
 
 async def user_extensions(user_uuid: str, 
                           db:AsyncIOMotorClient):
@@ -54,12 +55,9 @@ async def add_extension(user_uuid: UUID,
     if file.content_type not in ZIP_MIME:
         return {'success': False, 'message': 'Uncorrect MIME type of file'}
 
-    if (platform_name == "Chrome"):
-        _save_extension_file(platform_directory='Chrome_extensions', 
-                            filename=str(extension_document['extension_uuid']) + '.zip', 
-                            file=file)
-    elif (platform_name == "Mozilla"):
-        _save_extension_file(platform_directory='Mozilla_extensions', 
+    # Проверка platform_name и сохранение в нужной директории
+    if platform_name in PLATFORMS:
+        _save_extension_file(platform_directory=platform_name + '_extensions', 
                             filename=str(extension_document['extension_uuid']) + '.zip', 
                             file=file)
     else:
