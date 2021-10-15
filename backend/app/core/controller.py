@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, UploadFile, File
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.utils.mongodb import get_database
-from app.models.user import UserWithExtensionsResponse
 import app.services.user_service as user_service
 import app.services.extension_service as extension_service
 
@@ -15,6 +14,10 @@ router = APIRouter()
 @router.get('/extension/{extension_uuid}')
 async def get_extension(extension_uuid: str, db: AsyncIOMotorClient = Depends(get_database)):
     '''Найти расширение по uuid и выдать zip архив'''
+    try:
+        extension_uuid = UUID(extension_uuid)
+    except ValueError as err:
+        return {'success': False, 'message': 'Badly uuid format'}
     # Какая нибудь валидация запроса 
     response = await extension_service.get_extension(extension_uuid)
     return response

@@ -48,12 +48,46 @@ async def delete_extension(user_uuid: UUID,
                            extension_uuid:UUID, 
                            db:AsyncIOMotorClient):
     '''Удаление extension'''
+    user = await db[WORKDB]['users'].find_one({'user_uuid' : user_uuid}) # Попытка получить пользователя с user_uuid
+    if user == None:
+        return {
+            'success': False,
+            'message': 'There is no user with this user_uuid'
+        }
+
+    user_extensions = user['extensions']
+    if extension_uuid not in user_extensions:
+        return {
+            'success': False,
+            'message': 'There is no extension_uuid for this user_uuid'
+        }
+    
+    # Сделать удаление
+    try:
+        user_extensions.remove(extension_uuid)
+    except ValueError as err:
+        return {
+            'success' : False,
+            'message': 'Something went wrong!'
+        }
+    db[WORKDB]['users'].update_one({'user_uuid' : user_uuid}, {'$set' : {'extensions' : user_extensions}})
+
+    extension = await db[WORKDB]['extensions'].find_one({'extension_uuid' : extension_uuid})
+    # Может тоже быть none
+    platform = extension['platform']
+    db[WORKDB]['extensions'].delete_one({'extension_uuid' : extension_uuid})
+
+    file_path = os.path.dirname(__file__) + '/../source/' + platform + '_extensions/' + str(extension_uuid) + '.zip'
+    os.remove(file_path)
+
     return {
         "success": True,
-        'data': {
-            'message': 'delete user extension',
-            'user_uuid': user_uuid,
-            'extension_uuid': extension_uuid
+        'message': 'delete user extension',
+        'extension' : {
+            'extension_uuid' : extension['extension_uuid'],
+            'platform' : extension['platform'],
+            'extension_name' : extension['extension_name'],
+            'creation_datetime' : extension['creation_datetime'],
         }
     }
 
@@ -72,7 +106,7 @@ async def add_extension(user_uuid: UUID,
 
     # проверка MIME файла (.zip)
     if file.content_type not in ZIP_MIME:
-        return {'success': False, 'message': 'Uncorrect MIME type of file'}
+        return {'success': False, 'message': 'Uncorrect MIME-type of file'}
 
     # Проверка platform_name и сохранение в нужной директории
     if platform_name in PLATFORMS:
@@ -82,7 +116,7 @@ async def add_extension(user_uuid: UUID,
     else:
         return {'success' : False, 'message' : 'Unknown platform name'}
     
-    result = db[WORKDB]['extensions'].insert_one(extension_document) # Добавление extension записи
+    db[WORKDB]['extensions'].insert_one(extension_document) # Добавление extension записи
     user = await db[WORKDB]['users'].find_one({'user_uuid' : user_uuid}) # Попытка получить пользователя с user_uuid
 
     # Создание нового пользователя или добавление к существующему
@@ -108,15 +142,29 @@ def _add_extension_to_exist_user(user, extension, db:AsyncIOMotorClient):
 
     db[WORKDB]['users'].update_one({'user_uuid' : user['user_uuid']}, {'$set' : {'extensions' : user_extensions}})
 
-    return {'success': True, 'message': 'Add extension to exist user'}
+    return {'success': True, 'message': 'Add extension to exist user', 
+    'user_uuid' : user['user_uuid'],
+    'extension' : {
+        'extension_uuid' : extension['extension_uuid'],
+        'platform' : extension['platform'],
+        'extension_name' : extension['extension_name'],
+        'creation_datetime' : extension['creation_datetime'],
+    }}
 
-def _new_user_with_extension(user_uuid: UUID, extension_document, db:AsyncIOMotorClient):
+def _new_user_with_extension(user_uuid: UUID, extension, db:AsyncIOMotorClient):
     '''Создает в коллекции users новую запись'''
     new_user_document = {
             'user_uuid' : user_uuid,
-            'extensions' : [extension_document['extension_uuid']],
+            'extensions' : [extension['extension_uuid']],
     }
 
     db[WORKDB]['users'].insert_one(new_user_document)
 
-    return {'success': True, 'message': 'Create new user with extension'}
+    return {'success': True, 'message': 'Create new user with extension', 
+    'user_uuid' : new_user_document['user_uuid'],
+    'extension': {
+        'extension_uuid' : extension['extension_uuid'],
+        'platform' : extension['platform'],
+        'extension_name' : extension['extension_name'],
+        'creation_datetime' : extension['creation_datetime'],
+    }}
