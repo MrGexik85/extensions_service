@@ -2,3 +2,5 @@
 .vscode/
 .idea/
 .ropeproject/
+
+backend/app/source/*

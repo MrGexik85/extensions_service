@@ -12,7 +12,7 @@ services:
                 ports:
                         - 27017:27017
                 volumes:
-                        - db_vol:/data/db
+                        - ./db_vol:/data/db
 
         db-interface:
                 image: mongo-express

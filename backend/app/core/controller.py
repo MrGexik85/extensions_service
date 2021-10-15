@@ -12,27 +12,34 @@ import app.services.extension_service as extension_service
 
 router = APIRouter()
 
-@router.get('/extension/{extension_uuid}', tags=['extensions'])
+@router.get('/extension/{extension_uuid}')
 async def get_extension(extension_uuid: str, db: AsyncIOMotorClient = Depends(get_database)):
     '''Найти расширение по uuid и выдать zip архив'''
     # Какая нибудь валидация запроса 
     response = await extension_service.get_extension(extension_uuid)
     return response
 
-@router.get('/user/{user_uuid}/extensions', response_model=UserWithExtensionsResponse) 
+@router.get('/user/{user_uuid}/extensions') 
 async def get_user_extensions(user_uuid: str, db: AsyncIOMotorClient = Depends(get_database)):
     '''Выдать JSON все записи модели Extension для переданного пользователя'''
+    try:
+        user_uuid = UUID(user_uuid)
+    except ValueError as err:
+        return {'success': False, 'message': 'Badly uuid format'}
     # Какая нибудь валидация запроса 
-    response = await user_service.user_extensions(user_uuid)
+    response = await user_service.user_extensions(user_uuid, db)
     return response
 
 @router.delete('/user/{user_uuid}/delete_extension/{extension_uuid}')
 async def del_user_extension(user_uuid: str, extension_uuid: str, db: AsyncIOMotorClient = Depends(get_database)):
     '''Удалить расширение для переданнного пользователя'''
-    # user_uuid = UUID(user_uuid)
-    # extension_uuid = UUID(extension_uuid)
+    try:
+        user_uuid = UUID(user_uuid)
+        extension_uuid = UUID(extension_uuid)
+    except ValueError as err:
+        return {'success': False, 'message': 'Badly uuid format'}
     # Валидация
-    response = await user_service.delete_extension(user_uuid, extension_uuid)
+    response = await user_service.delete_extension(user_uuid, extension_uuid, db)
     return response
 
 @router.post('/user/{user_uuid}/new_extension')
