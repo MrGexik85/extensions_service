@@ -19,7 +19,7 @@ async def get_extension(extension_uuid: str, db: AsyncIOMotorClient = Depends(ge
     except ValueError as err:
         return {'success': False, 'message': 'Badly uuid format'}
     # Какая нибудь валидация запроса 
-    response = await extension_service.get_extension(extension_uuid)
+    response = await extension_service.get_extension(extension_uuid, db)
     return response
 
 @router.get('/user/{user_uuid}/extensions') 
