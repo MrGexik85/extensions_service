@@ -96,13 +96,13 @@ async def add_extension(user_uuid: UUID,
         return await _add_extension_to_exist_user(user, extension_document)
 
 
-def _get_user_extensions_response(user_uuid: str, extensions: list) -> dict:
+def _get_user_extensions_response(user_uuid: str, extensions: list) -> JSONResponse:
     '''Получение объекта ответа с плагинами пользователя'''
-    return {
+    return JSONResponse({
         'success': True,
-        'user_uuid': user_uuid,
+        'user_uuid': str(user_uuid),
         'extensions' : extensions
-    }
+    })
 
 
 async def _get_user_extensions_advanced(extensions) -> list:
@@ -114,23 +114,23 @@ async def _get_user_extensions_advanced(extensions) -> list:
             'extension_uuid' : str(extension['extension_uuid']),
             'platform' : extension['platform'],
             'extension_name' : extension['extension_name'],
-            'creation_datetime' : extension['creation_datetime']
+            'creation_datetime' : str(extension['creation_datetime'])
         }
         response_extensions.append(tmp)
     return response_extensions
 
 
-def _get_success_delete_response(user_uuid: UUID, extension: dict) -> dict:
+def _get_success_delete_response(user_uuid: UUID, extension: dict) -> JSONResponse:
     '''Ответ при успешном удалении плагина пользователя'''
     return JSONResponse({
         "success": True,
         'message': 'The extension was been removed',
-        'user_uuid': user_uuid,
+        'user_uuid': str(user_uuid),
         'extension' : {
-            'extension_uuid' : extension['extension_uuid'],
+            'extension_uuid' : str(extension['extension_uuid']),
             'platform' : extension['platform'],
             'extension_name' : extension['extension_name'],
-            'creation_datetime' : extension['creation_datetime'],
+            'creation_datetime' : str(extension['creation_datetime']),
         }
     })
 
@@ -167,12 +167,12 @@ async def _add_extension_to_exist_user(user, extension):
     await User.update_extensions_by_uuid(user_uuid=user['user_uuid'], extensions=user_extensions)
 
     return JSONResponse({'success': True, 'message': 'Add extension to exist user', 
-    'user_uuid' : user['user_uuid'],
+    'user_uuid' : str(user['user_uuid']),
     'extension' : {
-        'extension_uuid' : extension['extension_uuid'],
+        'extension_uuid' : str(extension['extension_uuid']),
         'platform' : extension['platform'],
         'extension_name' : extension['extension_name'],
-        'creation_datetime' : extension['creation_datetime'],
+        'creation_datetime' : str(extension['creation_datetime']),
     }})
 
 
@@ -186,10 +186,10 @@ async def _new_user_with_extension(user_uuid: UUID, extension):
     await User.insert_one(user_uuid, [extension['extension_uuid']])
 
     return JSONResponse({'success': True, 'message': 'Create new user with extension', 
-    'user_uuid' : new_user_document['user_uuid'],
+    'user_uuid' : str(new_user_document['user_uuid']),
     'extension': {
-        'extension_uuid' : extension['extension_uuid'],
+        'extension_uuid' : str(extension['extension_uuid']),
         'platform' : extension['platform'],
         'extension_name' : extension['extension_name'],
-        'creation_datetime' : extension['creation_datetime'],
+        'creation_datetime' : str(extension['creation_datetime']),
     }})
