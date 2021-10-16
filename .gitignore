@@ -4,6 +4,7 @@
 .ropeproject/
 
 .env
-backend/app/source/*
+backend/app/source/Chrome_extensions/*
+backend/app/source/Mozilla_extensions/*
 db_vol/*
 !db_vol/empty.txt
