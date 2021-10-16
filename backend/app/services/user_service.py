@@ -49,40 +49,34 @@ async def delete_extension(user_uuid: UUID,
                            db:AsyncIOMotorClient):
     '''Удаление extension'''
     user = await db[WORKDB]['users'].find_one({'user_uuid' : user_uuid}) # Попытка получить пользователя с user_uuid
+
     if user == None:
-        return {
-            'success': False,
-            'message': 'There is no user with this user_uuid'
-        }
+        return _get_error_response('Not found user with this user_uuid')
 
     user_extensions = user['extensions']
     if extension_uuid not in user_extensions:
-        return {
-            'success': False,
-            'message': 'There is no extension_uuid for this user_uuid'
-        }
+        return _get_error_response('Not found extension_uuid for this user_uuid')
     
     # Сделать удаление
     try:
         user_extensions.remove(extension_uuid)
     except ValueError as err:
-        return {
-            'success' : False,
-            'message': 'Something went wrong!'
-        }
+        return _get_error_response('Something went wrong when deleting the file')
+
     db[WORKDB]['users'].update_one({'user_uuid' : user_uuid}, {'$set' : {'extensions' : user_extensions}})
 
     extension = await db[WORKDB]['extensions'].find_one({'extension_uuid' : extension_uuid})
-    # Может тоже быть none
+    if extension == None:
+        return _get_error_response('Not found extension in extensions collection')
+
     platform = extension['platform']
     db[WORKDB]['extensions'].delete_one({'extension_uuid' : extension_uuid})
 
-    file_path = os.path.dirname(__file__) + '/../source/' + platform + '_extensions/' + str(extension_uuid) + '.zip'
-    os.remove(file_path)
+    _remove_extension_file(platform=platform, extension_uuid=str(extension_uuid))
 
     return {
         "success": True,
-        'message': 'delete user extension',
+        'message': 'The extension was been removed',
         'extension' : {
             'extension_uuid' : extension['extension_uuid'],
             'platform' : extension['platform'],
@@ -97,6 +91,7 @@ async def add_extension(user_uuid: UUID,
                         db:AsyncIOMotorClient):
     '''Создание записи extension и сохранение файла'''
 
+    # Создание сущности Extension
     extension_document = {
         'extension_uuid' : uuid4(),
         'platform': platform_name,
@@ -125,6 +120,16 @@ async def add_extension(user_uuid: UUID,
     else:
         return _add_extension_to_exist_user(user, extension_document, db)
 
+def _get_error_response(message: str) -> dict:
+    '''Объект для ответа при ошибке с сообщением message'''
+    return {
+        'success': False,
+        'message': message
+    }
+
+def _remove_extension_file(platform: str, extension_uuid: str):
+    file_path = os.path.dirname(__file__) + '/../source/' + platform + '_extensions/' + extension_uuid + '.zip'
+    os.remove(file_path)
 
 def _save_extension_file(platform_directory:str, filename:str, file: UploadFile):
     '''Сохраняет file в директории platform_directory'''

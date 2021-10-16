@@ -1,4 +1,4 @@
-# Async FastAPI-based application
+# FastAPI-based application
 
 - Python
 - FastAPI framework
