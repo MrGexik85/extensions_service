@@ -3,6 +3,7 @@
 .idea/
 .ropeproject/
 
+.env
 backend/app/source/*
 db_vol/*
 !db_vol/empty.txt
