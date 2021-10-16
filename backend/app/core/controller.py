@@ -2,6 +2,7 @@ from uuid import UUID
 from app.models.user import UserWithExtensionsResponse, UserNewExtensionResponse, UserDeleteExtensionResponse
 from fastapi import APIRouter, Depends, UploadFile, File
 from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi.responses import JSONResponse
 
 from app.utils.mongodb import get_database
 import app.services.user_service as user_service
@@ -18,7 +19,7 @@ async def get_extension(extension_uuid: str):
     try:
         extension_uuid = UUID(extension_uuid)
     except ValueError as err:
-        return {'success': False, 'message': 'Badly uuid format'}
+        return JSONResponse({'success': False, 'message': 'Badly uuid format'})
     # Какая нибудь валидация запроса 
     response = await extension_service.get_extension(extension_uuid)
     return response
@@ -29,7 +30,7 @@ async def get_user_extensions(user_uuid: str):
     try:
         user_uuid = UUID(user_uuid)
     except ValueError as err:
-        return {'success': False, 'message': 'Badly uuid format'}
+        return JSONResponse({'success': False, 'message': 'Badly uuid format'})
     # Какая нибудь валидация запроса 
     response = await user_service.user_extensions(user_uuid)
     return response
@@ -41,7 +42,7 @@ async def del_user_extension(user_uuid: str, extension_uuid: str):
         user_uuid = UUID(user_uuid)
         extension_uuid = UUID(extension_uuid)
     except ValueError as err:
-        return {'success': False, 'message': 'Badly uuid format'}
+        return JSONResponse({'success': False, 'message': 'Badly uuid format'})
     # Валидация
     response = await user_service.delete_extension(user_uuid, extension_uuid)
     return response
@@ -54,7 +55,7 @@ async def new_user_extension(user_uuid: str,
     try:
         user_uuid = UUID(user_uuid)
     except ValueError as err:
-        return {'success': False, 'message': 'Badly uuid format'}
+        return JSONResponse({'success': False, 'message': 'Badly uuid format'})
     #Валидация 
     response = await user_service.add_extension(user_uuid, platform_name, file)
     return response
