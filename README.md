@@ -13,6 +13,7 @@ run 'docker-compose up -d --build'
 
 ## Routes
 
+':8081' - mongo-express
 '/docs' - API documentation <br>
 GET '/extension/{id}' - get extension like zip archive (common HTTP response, file's meta info include in headers) <br>
 GET '/user/{id}/extensions' - get all user's extensions meta info <br>
