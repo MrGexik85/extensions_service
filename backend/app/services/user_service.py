@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 from fastapi import UploadFile
+from fastapi.responses import JSONResponse
 import os
 import shutil
 
@@ -37,7 +38,7 @@ async def delete_extension(user_uuid: UUID,
     user_extensions = user['extensions']
     if extension_uuid not in user_extensions:
         return _get_error_response('Not found extension_uuid for this user_uuid')
-    
+
     # Сделать удаление из [extensions] объекта user
     try:
         user_extensions.remove(extension_uuid)
@@ -121,7 +122,7 @@ async def _get_user_extensions_advanced(extensions) -> list:
 
 def _get_success_delete_response(user_uuid: UUID, extension: dict) -> dict:
     '''Ответ при успешном удалении плагина пользователя'''
-    return {
+    return JSONResponse({
         "success": True,
         'message': 'The extension was been removed',
         'user_uuid': user_uuid,
@@ -131,15 +132,15 @@ def _get_success_delete_response(user_uuid: UUID, extension: dict) -> dict:
             'extension_name' : extension['extension_name'],
             'creation_datetime' : extension['creation_datetime'],
         }
-    }
+    })
 
 
-def _get_error_response(message: str) -> dict:
+def _get_error_response(message: str) -> JSONResponse:
     '''Объект для ответа при ошибке с сообщением message'''
-    return {
+    return JSONResponse({
         'success': False,
         'message': message
-    }
+    })
 
 
 def _remove_extension_file(platform: str, extension_uuid: str):
@@ -165,14 +166,14 @@ async def _add_extension_to_exist_user(user, extension):
 
     await User.update_extensions_by_uuid(user_uuid=user['user_uuid'], extensions=user_extensions)
 
-    return {'success': True, 'message': 'Add extension to exist user', 
+    return JSONResponse({'success': True, 'message': 'Add extension to exist user', 
     'user_uuid' : user['user_uuid'],
     'extension' : {
         'extension_uuid' : extension['extension_uuid'],
         'platform' : extension['platform'],
         'extension_name' : extension['extension_name'],
         'creation_datetime' : extension['creation_datetime'],
-    }}
+    }})
 
 
 async def _new_user_with_extension(user_uuid: UUID, extension):
@@ -184,11 +185,11 @@ async def _new_user_with_extension(user_uuid: UUID, extension):
 
     await User.insert_one(user_uuid, [extension['extension_uuid']])
 
-    return {'success': True, 'message': 'Create new user with extension', 
+    return JSONResponse({'success': True, 'message': 'Create new user with extension', 
     'user_uuid' : new_user_document['user_uuid'],
     'extension': {
         'extension_uuid' : extension['extension_uuid'],
         'platform' : extension['platform'],
         'extension_name' : extension['extension_name'],
         'creation_datetime' : extension['creation_datetime'],
-    }}
+    }})
