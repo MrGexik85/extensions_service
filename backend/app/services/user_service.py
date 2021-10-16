@@ -74,16 +74,7 @@ async def delete_extension(user_uuid: UUID,
 
     _remove_extension_file(platform=platform, extension_uuid=str(extension_uuid))
 
-    return {
-        "success": True,
-        'message': 'The extension was been removed',
-        'extension' : {
-            'extension_uuid' : extension['extension_uuid'],
-            'platform' : extension['platform'],
-            'extension_name' : extension['extension_name'],
-            'creation_datetime' : extension['creation_datetime'],
-        }
-    }
+    return _get_success_delete_response(extension)
 
 async def add_extension(user_uuid: UUID, 
                         platform_name: str, 
@@ -119,6 +110,19 @@ async def add_extension(user_uuid: UUID,
         return _new_user_with_extension(user_uuid, extension_document, db)
     else:
         return _add_extension_to_exist_user(user, extension_document, db)
+
+def _get_success_delete_response(extension: dict) -> dict:
+    '''Ответ при успешном удалении плагина пользователя'''
+    return {
+        "success": True,
+        'message': 'The extension was been removed',
+        'extension' : {
+            'extension_uuid' : extension['extension_uuid'],
+            'platform' : extension['platform'],
+            'extension_name' : extension['extension_name'],
+            'creation_datetime' : extension['creation_datetime'],
+        }
+    }
 
 def _get_error_response(message: str) -> dict:
     '''Объект для ответа при ошибке с сообщением message'''
