@@ -10,6 +10,7 @@ async def connect_db():
     db.client = AsyncIOMotorClient(DATABASE_URL,
                                    maxPoolSize=MAX_CONNECTIONS_COUNT,
                                    minPoolSize=MIN_CONNECTIONS_COUNT)
+    
 
 
 async def disconnect_db():
