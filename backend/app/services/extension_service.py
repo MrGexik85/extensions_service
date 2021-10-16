@@ -1,6 +1,7 @@
 from uuid import UUID
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi.responses import FileResponse, Response
+from app.models.extension import Extension
 
 import os
 
@@ -12,7 +13,7 @@ async def get_extension(extension_uuid: UUID, db: AsyncIOMotorClient):
     '''Получение архива плагина с мета информацией с помощь HttpResponse, мета данные хранятся в заголовке'''
 
     # Получение информации о файле
-    extension_info = await db[WORKDB]['extensions'].find_one({'extension_uuid': extension_uuid})
+    extension_info = await Extension.find_by_uuid(extension_uuid=extension_uuid)
 
     # Если такого файла не существует
     if extension_info == None:

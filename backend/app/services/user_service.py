@@ -5,7 +5,8 @@ from fastapi import UploadFile
 import os
 import shutil
 
-
+from app.models.user import User
+from app.models.extension import Extension
 from app.utils.mongodb import get_database
 
 from app.models.extension import ExtensionInDB
@@ -20,7 +21,7 @@ async def user_extensions(user_uuid: UUID,
                           db:AsyncIOMotorClient):
     '''Возвращает все extensions для выбранного пользователя'''
 
-    user = await db[WORKDB]['users'].find_one({'user_uuid' : user_uuid}) # Попытка получить пользователя с user_uuid
+    user = await User.find_by_uuid(user_uuid=user_uuid)
     if user == None:
         return _get_user_extensions_response(user_uuid=str(user_uuid), extensions=[])
     
@@ -34,7 +35,7 @@ async def delete_extension(user_uuid: UUID,
                            extension_uuid:UUID, 
                            db:AsyncIOMotorClient):
     '''Удаление extension'''
-    user = await db[WORKDB]['users'].find_one({'user_uuid' : user_uuid}) # Попытка получить пользователя с user_uuid
+    user = await User.find_by_uuid(user_uuid=user_uuid) # Попытка получить пользователя с user_uuid
 
     if user == None:
         return _get_error_response('Not found user with this user_uuid')
@@ -49,18 +50,19 @@ async def delete_extension(user_uuid: UUID,
     except ValueError as err:
         return _get_error_response('Something went wrong when deleting the file')
 
-    db[WORKDB]['users'].update_one({'user_uuid' : user_uuid}, {'$set' : {'extensions' : user_extensions}})
+    await User.update_extensions_by_uuid(user_uuid=user_uuid, extensions=user_extensions)
 
-    extension = await db[WORKDB]['extensions'].find_one({'extension_uuid' : extension_uuid})
+    extension = await Extension.find_by_uuid(extension_uuid=extension_uuid)
     if extension == None:
         return _get_error_response('Not found extension in extensions collection')
 
     platform = extension['platform']
-    db[WORKDB]['extensions'].delete_one({'extension_uuid' : extension_uuid})
+    #db[WORKDB]['extensions'].delete_one({'extension_uuid' : extension_uuid})
+    await Extension.delete_extension_by_uuid(extension_uuid=extension_uuid)
 
     _remove_extension_file(platform=platform, extension_uuid=str(extension_uuid))
 
-    return _get_success_delete_response(extension)
+    return _get_success_delete_response(user_uuid, extension)
 
 
 async def add_extension(user_uuid: UUID, 
@@ -89,14 +91,15 @@ async def add_extension(user_uuid: UUID,
     else:
         return {'success' : False, 'message' : 'Unknown platform name'}
     
-    db[WORKDB]['extensions'].insert_one(extension_document) # Добавление extension записи
-    user = await db[WORKDB]['users'].find_one({'user_uuid' : user_uuid}) # Попытка получить пользователя с user_uuid
+    #db[WORKDB]['extensions'].insert_one(extension_document) # Добавление extension записи
+    await Extension.insert_one(extension=extension_document)
+    user = await User.find_by_uuid(user_uuid=user_uuid)
 
     # Создание нового пользователя или добавление к существующему
     if user == None:
-        return _new_user_with_extension(user_uuid, extension_document, db)
+        return await _new_user_with_extension(user_uuid, extension_document, db)
     else:
-        return _add_extension_to_exist_user(user, extension_document, db)
+        return await _add_extension_to_exist_user(user, extension_document, db)
 
 
 def _get_user_extensions_response(user_uuid: str, extensions: list) -> dict:
@@ -108,11 +111,11 @@ def _get_user_extensions_response(user_uuid: str, extensions: list) -> dict:
     }
 
 
-async def _get_user_extensions_advanced(extensions, db) -> list:
+async def _get_user_extensions_advanced(extensions) -> list:
     '''Замена массива extensions с UUID на массив extensions с объектами Extension'''
     response_extensions = []
     for extension_uuid in extensions:
-        extension = await db[WORKDB]['extensions'].find_one({'extension_uuid' : extension_uuid})
+        extension = await Extension.find_by_uuid(extension_uuid=extension_uuid)
         tmp = {
             'extension_uuid' : str(extension['extension_uuid']),
             'platform' : extension['platform'],
@@ -123,11 +126,12 @@ async def _get_user_extensions_advanced(extensions, db) -> list:
     return response_extensions
 
 
-def _get_success_delete_response(extension: dict) -> dict:
+def _get_success_delete_response(user_uuid: UUID, extension: dict) -> dict:
     '''Ответ при успешном удалении плагина пользователя'''
     return {
         "success": True,
         'message': 'The extension was been removed',
+        'user_uuid': user_uuid,
         'extension' : {
             'extension_uuid' : extension['extension_uuid'],
             'platform' : extension['platform'],
@@ -159,14 +163,14 @@ def _save_extension_file(platform_directory:str, filename:str, file: UploadFile)
         shutil.copyfileobj(file.file, buffer)
 
 
-def _add_extension_to_exist_user(user, extension, db:AsyncIOMotorClient):
+async def _add_extension_to_exist_user(user, extension):
     '''Добавляет extension_uuid в user.extensions'''
     user_extensions = user['extensions']
     if user_extensions == None:
         user_extensions = []
     user_extensions.append(extension['extension_uuid']) # Взять имеющийся массив extensions и добавить один новый элемент
 
-    db[WORKDB]['users'].update_one({'user_uuid' : user['user_uuid']}, {'$set' : {'extensions' : user_extensions}})
+    await User.update_extensions_by_uuid(user_uuid=user['user_uuid'], extensions=user_extensions)
 
     return {'success': True, 'message': 'Add extension to exist user', 
     'user_uuid' : user['user_uuid'],
@@ -178,14 +182,14 @@ def _add_extension_to_exist_user(user, extension, db:AsyncIOMotorClient):
     }}
 
 
-def _new_user_with_extension(user_uuid: UUID, extension, db:AsyncIOMotorClient):
+async def _new_user_with_extension(user_uuid: UUID, extension):
     '''Создает в коллекции users новую запись'''
     new_user_document = {
             'user_uuid' : user_uuid,
             'extensions' : [extension['extension_uuid']],
     }
 
-    db[WORKDB]['users'].insert_one(new_user_document)
+    await User.insert_one(user_uuid, [extension['extension_uuid']])
 
     return {'success': True, 'message': 'Create new user with extension', 
     'user_uuid' : new_user_document['user_uuid'],

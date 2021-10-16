@@ -1,5 +1,5 @@
 from uuid import UUID
-from app.models.user import UserWithExtensionsResponse, UserNewExtensionResponse
+from app.models.user import UserWithExtensionsResponse, UserNewExtensionResponse, UserDeleteExtensionResponse
 from fastapi import APIRouter, Depends, UploadFile, File
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -34,7 +34,7 @@ async def get_user_extensions(user_uuid: str, db: AsyncIOMotorClient = Depends(g
     response = await user_service.user_extensions(user_uuid, db)
     return response
 
-@router.delete('/user/{user_uuid}/delete_extension/{extension_uuid}')
+@router.delete('/user/{user_uuid}/delete_extension/{extension_uuid}', response_model=UserDeleteExtensionResponse)
 async def del_user_extension(user_uuid: str, extension_uuid: str, db: AsyncIOMotorClient = Depends(get_database)):
     '''Удалить расширение для переданнного пользователя'''
     try:
