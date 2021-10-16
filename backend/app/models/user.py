@@ -13,19 +13,23 @@ class User():
 
     async def find_by_uuid(user_uuid: UUID):
         db = await get_database()
-        data = await db[WORKDB]['users'].find_one({'user_uuid' : user_uuid})
+        data = await db[WORKDB]['users'].find_one({'_id' : user_uuid})
+        if data == None:
+            return None
+        data['user_uuid'] = data['_id']
+        del data['_id']
         return data
     
     async def insert_one(user_uuid: UUID, extensions: List[UUID]):
         db = await get_database()
         await db[WORKDB]['users'].insert_one({
-            'user_uuid': user_uuid,
+            '_id': user_uuid,
             'extensions': extensions
         })
 
     async def update_extensions_by_uuid(user_uuid: UUID, extensions: list):
         db = await get_database()
-        await db[WORKDB]['users'].update_one({'user_uuid' : user_uuid}, {'$set' : {'extensions' : extensions}})
+        await db[WORKDB]['users'].update_one({'_id' : user_uuid}, {'$set' : {'extensions' : extensions}})
 
 
 class UserDeleteExtensionResponse(BaseModel):

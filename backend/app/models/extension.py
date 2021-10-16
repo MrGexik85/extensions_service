@@ -13,13 +13,17 @@ class Extension():
     
     async def find_by_uuid(extension_uuid: UUID):
         db = await get_database()
-        data = await db[WORKDB]['extensions'].find_one({'extension_uuid': extension_uuid})
+        data = await db[WORKDB]['extensions'].find_one({'_id': extension_uuid})
+        if data == None:
+            return None
+        data['extension_uuid'] = data['_id']
+        del data['_id']
         return data
     
     async def insert_one(extension: dict):
         db = await get_database()
         await db[WORKDB]['extensions'].insert_one({
-            'extension_uuid': extension['extension_uuid'],
+            '_id': extension['extension_uuid'],
             'platform': extension['platform'],
             'extension_name': extension['extension_name'],
             'creation_datetime': extension['creation_datetime']
@@ -27,7 +31,7 @@ class Extension():
 
     async def delete_extension_by_uuid(extension_uuid: UUID):
         db = await get_database()
-        await db[WORKDB]['extensions'].delete_one({'extension_uuid' : extension_uuid})
+        await db[WORKDB]['extensions'].delete_one({'_id' : extension_uuid})
 
 
 class ExtensionInDB(BaseModel):
