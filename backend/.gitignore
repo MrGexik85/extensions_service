@@ -3,9 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Zip files
-./app/source/Chrome_extensions/*
-./app/source/Mozilla_extensions/*
 
 # C extensions
 *.so
