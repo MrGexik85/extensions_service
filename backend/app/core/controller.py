@@ -1,4 +1,5 @@
 from uuid import UUID
+from app.models.user import UserWithExtensionsResponse, UserNewExtensionResponse
 from fastapi import APIRouter, Depends, UploadFile, File
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -22,7 +23,7 @@ async def get_extension(extension_uuid: str, db: AsyncIOMotorClient = Depends(ge
     response = await extension_service.get_extension(extension_uuid, db)
     return response
 
-@router.get('/user/{user_uuid}/extensions') 
+@router.get('/user/{user_uuid}/extensions', response_model=UserWithExtensionsResponse) 
 async def get_user_extensions(user_uuid: str, db: AsyncIOMotorClient = Depends(get_database)):
     '''Выдать JSON все записи модели Extension для переданного пользователя'''
     try:
@@ -45,7 +46,7 @@ async def del_user_extension(user_uuid: str, extension_uuid: str, db: AsyncIOMot
     response = await user_service.delete_extension(user_uuid, extension_uuid, db)
     return response
 
-@router.post('/user/{user_uuid}/new_extension')
+@router.post('/user/{user_uuid}/new_extension', response_model=UserNewExtensionResponse)
 async def new_user_extension(user_uuid: str, 
                             platform_name: str, 
                             file: UploadFile = File(...),

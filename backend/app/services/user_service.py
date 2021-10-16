@@ -15,6 +15,7 @@ WORKDB = 'core'
 ZIP_MIME = ['application/zip', 'application/octet-stream', 'application/x-zip-compressed', 'multipart/x-zip']
 PLATFORMS = ['Chrome', 'Mozilla']
 
+
 async def user_extensions(user_uuid: UUID, 
                           db:AsyncIOMotorClient):
     '''Возвращает все extensions для выбранного пользователя'''
@@ -28,27 +29,6 @@ async def user_extensions(user_uuid: UUID,
 
     return _get_user_extensions_response(user_uuid=str(user_uuid), extensions=response_extensions)
 
-def _get_user_extensions_response(user_uuid: str, extensions: list) -> dict:
-    '''Получение объекта ответа с плагинами пользователя'''
-    return {
-        'success': True,
-        'user_uuid': user_uuid,
-        'extensions' : extensions
-    }
-
-async def _get_user_extensions_advanced(extensions, db) -> list:
-    '''Замена массива extensions с UUID на массив extensions с объектами Extension'''
-    response_extensions = []
-    for extension_uuid in extensions:
-        extension = await db[WORKDB]['extensions'].find_one({'extension_uuid' : extension_uuid})
-        tmp = {
-            'extension_uuid' : str(extension['extension_uuid']),
-            'platform' : extension['platform'],
-            'extension_name' : extension['extension_name'],
-            'creation_datetime' : extension['creation_datetime']
-        }
-        response_extensions.append(tmp)
-    return response_extensions
 
 async def delete_extension(user_uuid: UUID, 
                            extension_uuid:UUID, 
@@ -81,6 +61,7 @@ async def delete_extension(user_uuid: UUID,
     _remove_extension_file(platform=platform, extension_uuid=str(extension_uuid))
 
     return _get_success_delete_response(extension)
+
 
 async def add_extension(user_uuid: UUID, 
                         platform_name: str, 
@@ -117,6 +98,31 @@ async def add_extension(user_uuid: UUID,
     else:
         return _add_extension_to_exist_user(user, extension_document, db)
 
+
+def _get_user_extensions_response(user_uuid: str, extensions: list) -> dict:
+    '''Получение объекта ответа с плагинами пользователя'''
+    return {
+        'success': True,
+        'user_uuid': user_uuid,
+        'extensions' : extensions
+    }
+
+
+async def _get_user_extensions_advanced(extensions, db) -> list:
+    '''Замена массива extensions с UUID на массив extensions с объектами Extension'''
+    response_extensions = []
+    for extension_uuid in extensions:
+        extension = await db[WORKDB]['extensions'].find_one({'extension_uuid' : extension_uuid})
+        tmp = {
+            'extension_uuid' : str(extension['extension_uuid']),
+            'platform' : extension['platform'],
+            'extension_name' : extension['extension_name'],
+            'creation_datetime' : extension['creation_datetime']
+        }
+        response_extensions.append(tmp)
+    return response_extensions
+
+
 def _get_success_delete_response(extension: dict) -> dict:
     '''Ответ при успешном удалении плагина пользователя'''
     return {
@@ -130,6 +136,7 @@ def _get_success_delete_response(extension: dict) -> dict:
         }
     }
 
+
 def _get_error_response(message: str) -> dict:
     '''Объект для ответа при ошибке с сообщением message'''
     return {
@@ -137,9 +144,12 @@ def _get_error_response(message: str) -> dict:
         'message': message
     }
 
+
 def _remove_extension_file(platform: str, extension_uuid: str):
+    '''Удаление файла из директрии <platform>_extensions'''
     file_path = os.path.dirname(__file__) + '/../source/' + platform + '_extensions/' + extension_uuid + '.zip'
     os.remove(file_path)
+
 
 def _save_extension_file(platform_directory:str, filename:str, file: UploadFile):
     '''Сохраняет file в директории platform_directory'''
@@ -147,6 +157,7 @@ def _save_extension_file(platform_directory:str, filename:str, file: UploadFile)
 
     with open(path, 'wb') as buffer:
         shutil.copyfileobj(file.file, buffer)
+
 
 def _add_extension_to_exist_user(user, extension, db:AsyncIOMotorClient):
     '''Добавляет extension_uuid в user.extensions'''
@@ -165,6 +176,7 @@ def _add_extension_to_exist_user(user, extension, db:AsyncIOMotorClient):
         'extension_name' : extension['extension_name'],
         'creation_datetime' : extension['creation_datetime'],
     }}
+
 
 def _new_user_with_extension(user_uuid: UUID, extension, db:AsyncIOMotorClient):
     '''Создает в коллекции users новую запись'''
