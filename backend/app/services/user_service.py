@@ -1,15 +1,11 @@
 from datetime import datetime
 from uuid import UUID, uuid4
-from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import UploadFile
 import os
 import shutil
 
 from app.models.user import User
 from app.models.extension import Extension
-from app.utils.mongodb import get_database
-
-from app.models.extension import ExtensionInDB
 
 
 WORKDB = 'core'
@@ -17,8 +13,7 @@ ZIP_MIME = ['application/zip', 'application/octet-stream', 'application/x-zip-co
 PLATFORMS = ['Chrome', 'Mozilla']
 
 
-async def user_extensions(user_uuid: UUID, 
-                          db:AsyncIOMotorClient):
+async def user_extensions(user_uuid: UUID):
     '''Возвращает все extensions для выбранного пользователя'''
 
     user = await User.find_by_uuid(user_uuid=user_uuid)
@@ -26,14 +21,13 @@ async def user_extensions(user_uuid: UUID,
         return _get_user_extensions_response(user_uuid=str(user_uuid), extensions=[])
     
     extensions = user['extensions']
-    response_extensions = await _get_user_extensions_advanced(extensions, db)
+    response_extensions = await _get_user_extensions_advanced(extensions)
 
     return _get_user_extensions_response(user_uuid=str(user_uuid), extensions=response_extensions)
 
 
 async def delete_extension(user_uuid: UUID, 
-                           extension_uuid:UUID, 
-                           db:AsyncIOMotorClient):
+                           extension_uuid:UUID):
     '''Удаление extension'''
     user = await User.find_by_uuid(user_uuid=user_uuid) # Попытка получить пользователя с user_uuid
 
@@ -67,8 +61,7 @@ async def delete_extension(user_uuid: UUID,
 
 async def add_extension(user_uuid: UUID, 
                         platform_name: str, 
-                        file: UploadFile,
-                        db:AsyncIOMotorClient):
+                        file: UploadFile):
     '''Создание записи extension и сохранение файла'''
 
     # Создание сущности Extension
@@ -97,9 +90,9 @@ async def add_extension(user_uuid: UUID,
 
     # Создание нового пользователя или добавление к существующему
     if user == None:
-        return await _new_user_with_extension(user_uuid, extension_document, db)
+        return await _new_user_with_extension(user_uuid, extension_document)
     else:
-        return await _add_extension_to_exist_user(user, extension_document, db)
+        return await _add_extension_to_exist_user(user, extension_document)
 
 
 def _get_user_extensions_response(user_uuid: str, extensions: list) -> dict:

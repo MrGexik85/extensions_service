@@ -5,11 +5,9 @@ from app.models.extension import Extension
 
 import os
 
-from app.utils.mongodb import get_database
-
 WORKDB = 'core'
 
-async def get_extension(extension_uuid: UUID, db: AsyncIOMotorClient):
+async def get_extension(extension_uuid: UUID):
     '''Получение архива плагина с мета информацией с помощь HttpResponse, мета данные хранятся в заголовке'''
 
     # Получение информации о файле
