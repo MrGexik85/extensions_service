@@ -52,7 +52,7 @@ async def delete_extension(user_uuid: UUID,
         return _get_error_response('Not found extension in extensions collection')
 
     platform = extension['platform']
-    #db[WORKDB]['extensions'].delete_one({'extension_uuid' : extension_uuid})
+
     await Extension.delete_extension_by_uuid(extension_uuid=extension_uuid)
 
     _remove_extension_file(platform=platform, extension_uuid=str(extension_uuid))
@@ -75,7 +75,7 @@ async def add_extension(user_uuid: UUID,
 
     # проверка MIME файла (.zip)
     if file.content_type not in ZIP_MIME:
-        return JSONResponse({'success': False, 'message': 'Uncorrect MIME-type of file'})
+        return _get_error_response('Incorrect MIME-type of file')
 
     # Проверка platform_name и сохранение в нужной директории
     if platform_name in PLATFORMS:
@@ -83,9 +83,8 @@ async def add_extension(user_uuid: UUID,
                             filename=str(extension_document['extension_uuid']) + '.zip', 
                             file=file)
     else:
-        return JSONResponse({'success' : False, 'message' : 'Unknown platform name'})
+        return _get_error_response('Unknown platform name')
     
-    #db[WORKDB]['extensions'].insert_one(extension_document) # Добавление extension записи
     await Extension.insert_one(extension=extension_document)
     user = await User.find_by_uuid(user_uuid=user_uuid)
 
@@ -94,7 +93,6 @@ async def add_extension(user_uuid: UUID,
         return await _new_user_with_extension(user_uuid, extension_document)
     else:
         return await _add_extension_to_exist_user(user, extension_document)
-
 
 def _get_user_extensions_response(user_uuid: str, extensions: list) -> JSONResponse:
     '''Получение объекта ответа с плагинами пользователя'''
