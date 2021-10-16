@@ -27,6 +27,7 @@ POST '/user/{user_id}/new_extension' - get file in request and create new Extens
 -   -   - ./backend/app/models - Models
 -   -   - ./backend/app/services - Controllers
 -   -   - ./backend/app/core - Routes logic
+-   -   - ./backend/app/source - storage of .zip archives
 -   -   - ./backend/app/utils - Supporting tools (like connect to db...)
 - ./db_vol contains DataBase files
 
