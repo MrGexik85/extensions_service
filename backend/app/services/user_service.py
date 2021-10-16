@@ -75,7 +75,7 @@ async def add_extension(user_uuid: UUID,
 
     # проверка MIME файла (.zip)
     if file.content_type not in ZIP_MIME:
-        return {'success': False, 'message': 'Uncorrect MIME-type of file'}
+        return JSONResponse({'success': False, 'message': 'Uncorrect MIME-type of file'})
 
     # Проверка platform_name и сохранение в нужной директории
     if platform_name in PLATFORMS:
@@ -83,7 +83,7 @@ async def add_extension(user_uuid: UUID,
                             filename=str(extension_document['extension_uuid']) + '.zip', 
                             file=file)
     else:
-        return {'success' : False, 'message' : 'Unknown platform name'}
+        return JSONResponse({'success' : False, 'message' : 'Unknown platform name'})
     
     #db[WORKDB]['extensions'].insert_one(extension_document) # Добавление extension записи
     await Extension.insert_one(extension=extension_document)
