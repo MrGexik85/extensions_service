@@ -21,12 +21,23 @@ async def user_extensions(user_uuid: UUID,
 
     user = await db[WORKDB]['users'].find_one({'user_uuid' : user_uuid}) # Попытка получить пользователя с user_uuid
     if user == None:
-        return {'success' : True, 'user': {
-            'user_uuid' : user_uuid,
-            'extensions' : []
-        }}
+        return _get_user_extensions_response(user_uuid=str(user_uuid), extensions=[])
     
     extensions = user['extensions']
+    response_extensions = await _get_user_extensions_advanced(extensions, db)
+
+    return _get_user_extensions_response(user_uuid=str(user_uuid), extensions=response_extensions)
+
+def _get_user_extensions_response(user_uuid: str, extensions: list) -> dict:
+    '''Получение объекта ответа с плагинами пользователя'''
+    return {
+        'success': True,
+        'user_uuid': user_uuid,
+        'extensions' : extensions
+    }
+
+async def _get_user_extensions_advanced(extensions, db) -> list:
+    '''Замена массива extensions с UUID на массив extensions с объектами Extension'''
     response_extensions = []
     for extension_uuid in extensions:
         extension = await db[WORKDB]['extensions'].find_one({'extension_uuid' : extension_uuid})
@@ -37,12 +48,7 @@ async def user_extensions(user_uuid: UUID,
             'creation_datetime' : extension['creation_datetime']
         }
         response_extensions.append(tmp)
-
-    return {
-        'success' : True,
-        'user_uuid' : str(user_uuid),
-        'extensions' : response_extensions
-    }
+    return response_extensions
 
 async def delete_extension(user_uuid: UUID, 
                            extension_uuid:UUID, 
@@ -57,7 +63,7 @@ async def delete_extension(user_uuid: UUID,
     if extension_uuid not in user_extensions:
         return _get_error_response('Not found extension_uuid for this user_uuid')
     
-    # Сделать удаление
+    # Сделать удаление из [extensions] объекта user
     try:
         user_extensions.remove(extension_uuid)
     except ValueError as err:
