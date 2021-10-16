@@ -7,7 +7,7 @@
 
 ## Installation
 
-duplicate enviroment file 'env.example' and rename to '.env'
+duplicate enviroment file 'env.example', write your own values and rename to '.env'
 run 'docker-compose up -d --build'
 
 
