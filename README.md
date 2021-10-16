@@ -31,3 +31,7 @@ POST '/user/{user_id}/new_extension' - get file in request and create new Extens
 -   -   - ./backend/app/utils - Supporting tools (like connect to db...)
 - ./db_vol contains DataBase files
 
+
+## To do list
+1. Add tests
+2. Handle more exceptions
