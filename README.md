@@ -36,4 +36,4 @@ POST '/user/{user_id}/new_extension' - get file in request and create new Extens
 ## To do list
 1. Add tests
 2. Handle more exceptions
-3. Upgrade models
+3. Upgrade models classes
