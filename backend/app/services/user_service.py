@@ -9,7 +9,6 @@ from app.models.user import User
 from app.models.extension import Extension
 
 
-WORKDB = 'core'
 ZIP_MIME = ['application/zip', 'application/octet-stream', 'application/x-zip-compressed', 'multipart/x-zip']
 PLATFORMS = ['Chrome', 'Mozilla']
 

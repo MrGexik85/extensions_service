@@ -1,10 +1,8 @@
 from uuid import UUID
 from app.models.user import UserWithExtensionsResponse, UserNewExtensionResponse, UserDeleteExtensionResponse
-from fastapi import APIRouter, Depends, UploadFile, File
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import JSONResponse
 
-from app.utils.mongodb import get_database
 import app.services.user_service as user_service
 import app.services.extension_service as extension_service
 

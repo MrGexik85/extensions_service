@@ -1,11 +1,10 @@
 from typing import List
 from .extension import ExtensionInDB, Extension
 from pydantic import BaseModel
-from fastapi import Depends
 from uuid import UUID, uuid4
 from app.utils.mongodb import get_database
+from config import DATABASE_WORKDB as WORKDB
 
-WORKDB = 'core'
 
 class User():
     def __init__(self, user_uuid: UUID = uuid4(), extensions: List[UUID] = []) -> None:

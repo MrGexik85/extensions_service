@@ -1,17 +1,14 @@
 from pydantic import BaseModel
 from datetime import datetime
-from fastapi import File, UploadFile
 from uuid import UUID
-
+from config import DATABASE_WORKDB as WORKDB
 from app.utils.mongodb import get_database
-
-WORKDB = 'core'
 
 class Extension():
     def __init__(self, extensions: dict) -> None:
         pass
     
-    async def find_by_uuid(extension_uuid: UUID):
+    async def find_by_uuid(extension_uuid: UUID) -> dict:
         db = await get_database()
         data = await db[WORKDB]['extensions'].find_one({'_id': extension_uuid})
         if data == None:
