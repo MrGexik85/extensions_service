@@ -4,6 +4,7 @@
 .ropeproject/
 
 .env
+backend/requirements.txt
 backend/app/source/Chrome_extensions/*.zip
 backend/app/source/Mozilla_extensions/*.zip
 db_vol/*
